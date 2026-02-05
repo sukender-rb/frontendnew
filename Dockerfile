@@ -1,4 +1,5 @@
 # ---------- Stage 1: Build React app ----------
+##
 FROM node:22 AS clientbuild
 WORKDIR /client
 

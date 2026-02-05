@@ -1,26 +1,33 @@
-# Stage 1: Build React app
-FROM node:22 AS build
-WORKDIR /app
+# ---------- Stage 1: Build React app ----------
+FROM node:22 AS clientbuild
+WORKDIR /client
 
+# install client deps
 COPY package*.json ./
 RUN npm install --legacy-peer-deps
 
-COPY . .
+# copy client source and build
+COPY public ./public
+COPY src ./src
+# if you have these files, keep them; harmless if missing:
+COPY *.json ./
+COPY *.js ./
 RUN npm run build
 
-# copy build into server folder
-RUN cp -r build server
 
-# install server dependencies
-WORKDIR /app/server
-RUN npm install --legacy-peer-deps
-
-
-# Stage 2: Running the BFF Server
+# ---------- Stage 2: Install server deps + run ----------
 FROM node:22-alpine AS final
 WORKDIR /server
 
-COPY --from=build /app/server .
+# install server deps
+COPY server/package*.json ./
+RUN npm install --legacy-peer-deps
+
+# copy server source
+COPY server/ ./
+
+# copy React build into server/build
+COPY --from=clientbuild /client/build ./build
 
 EXPOSE 5000
 CMD ["node", "index.js"]
